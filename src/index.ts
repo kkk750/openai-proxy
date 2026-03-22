@@ -9,15 +9,17 @@
  */
 import handleRequest from "./handle-request";
 
+const parseOptionalPositiveInt = (value: string | undefined): number | undefined => {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+};
+
 export interface Env {
-  // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-  // MY_KV_NAMESPACE: KVNamespace;
-  //
-  // Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-  // MY_DURABLE_OBJECT: DurableObjectNamespace;
-  //
-  // Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-  // MY_BUCKET: R2Bucket;
+  OPENAI_API_KEY?: string;
+  PROXY_TOKEN?: string;
+  MAX_BODY_BYTES?: string;
+  RATE_LIMIT_WINDOW_MS?: string;
+  RATE_LIMIT_MAX_REQUESTS?: string;
 }
 
 export default {
@@ -26,6 +28,12 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
-    return handleRequest(request);
+    return handleRequest(request, {
+      openaiApiKey: env.OPENAI_API_KEY,
+      proxyToken: env.PROXY_TOKEN,
+      maxBodyBytes: parseOptionalPositiveInt(env.MAX_BODY_BYTES),
+      rateLimitWindowMs: parseOptionalPositiveInt(env.RATE_LIMIT_WINDOW_MS),
+      rateLimitMaxRequests: parseOptionalPositiveInt(env.RATE_LIMIT_MAX_REQUESTS),
+    });
   },
 };
